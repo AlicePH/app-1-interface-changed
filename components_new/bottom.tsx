@@ -6,29 +6,32 @@ export function BottomBar() {
     const address = useAddress();
 
     return(
-        <Box position={"fixed"} 
-        bottom={0} 
-        width={"100%"} 
-        bg={"black"} 
-        color={"white"}
-        borderTop={"1px solid"} 
-        borderColor={"gray.300"} 
-        py={"10px"} 
-        px={"40px"}>
+        <Box 
+            position={"fixed"} 
+            bottom={0} 
+            width={"100%"} 
+            bg="rgba(255, 255, 255, 0.8)" 
+            color={"gray.800"}
+            backdropFilter="blur(10px)"
+            borderTop={"1px solid"} 
+            borderColor={"gray.100"} 
+            py={"10px"} 
+            px={"40px"}
+            boxShadow="sm"
+        >
             <Flex justifyContent={"space-between"} alignItems={"center"}>
-                    <Stack direction={"row"} spacing={"4"}>
-                    <Link as={NextLink} href='/references' mx={2.5}>
-                        <Text>References</Text>
+                <Stack direction={"row"} spacing={"4"}>
+                    {/* <Link as={NextLink} href='/references' mx={2.5}>
+                        <Text fontWeight="medium">References</Text>
                     </Link>
                     <Link as={NextLink} href='/about' mx={2.5}>
-                        <Text>About us</Text>
-                    </Link>
-                    </Stack>
-                    <Flex>
-                        <Text>Moscow, 2025</Text>
-                    </Flex>
+                        <Text fontWeight="medium">About us</Text>
+                    </Link> */}
+                </Stack>
+                <Flex>
+                    <Text fontWeight="medium">Moscow, 2025</Text>
+                </Flex>
             </Flex>
         </Box>
     )
 }
-
