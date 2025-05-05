@@ -1,31 +1,27 @@
 import React from 'react';
-import { ConnectWallet } from "@thirdweb-dev/react";
-import { motion } from "framer-motion";
-import { keyframes } from "@emotion/react";
 import Image from "next/image";
 import { NextPage } from "next";
 import NextLink from 'next/link';
-import { Container, Flex, Heading, Button, Text, Box, VStack } from "@chakra-ui/react";
+import { Box, Container, Flex, Stack, Heading, Button, Text, VStack } from "@chakra-ui/react";
+import { motion } from "framer-motion";
+import { keyframes } from "@emotion/react";
 
-// Keyframe для анимации градиента
 const gradient = keyframes`
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 `;
 
-// Кастомный компонент кнопки с правильными типами
 const MotionLinkButton = motion(
   React.forwardRef<HTMLButtonElement, any>((props, ref) => (
-    <Button 
-      as={NextLink} 
+    <Button
+      as={NextLink}
       ref={ref}
       {...props}
     />
   ))
 );
 
-// Варианты анимации с правильными типами
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -43,7 +39,7 @@ const itemVariants = {
   visible: {
     y: 0,
     opacity: 1,
-    transition: { 
+    transition: {
       duration: 0.6,
       ease: "easeOut"
     },
@@ -52,17 +48,14 @@ const itemVariants = {
 
 const Home: NextPage = () => {
   return (
-    <Box
-      minH="100vh"
-      bgGradient="linear(to-br, #6366f1, #8b5cf6, #ec4899)"
+    <Box minH="100vh"
+      bgGradient="linear(to-br, #0F4C75, #3282B8, #BBE1FA)"
       css={{
         backgroundSize: '400% 400%',
         animation: `${gradient} 15s ease infinite`,
       }}
-      position="relative"
-    >
-      <Container 
-        maxW="container.xl" 
+      position="relative">
+      <Container maxW="container.xl"
         height="100vh"
         display="flex"
         alignItems="center"
@@ -70,14 +63,13 @@ const Home: NextPage = () => {
         as={motion.div}
         variants={containerVariants}
         initial="hidden"
-        animate="visible"
-      >
-        <VStack 
-          spacing={8} 
+        animate="visible">
+        <VStack
+          spacing={8}
           textAlign="center"
           maxW="800px"
         >
-          <Box 
+          <Box
             as={motion.div}
             variants={itemVariants}
             whileHover={{ scale: 1.05 }}
@@ -86,7 +78,7 @@ const Home: NextPage = () => {
             <Image
               src="/images/dumbbell.png"
               width={200}
-              height={200} 
+              height={200}
               alt="Gym Logo"
               priority
             />
@@ -96,14 +88,14 @@ const Home: NextPage = () => {
             as={motion.h1}
             variants={itemVariants}
             fontSize={{ base: '4xl', md: '6xl' }}
-            bgGradient="linear(to-r, white, #f0abfc)"
-            bgClip="text"
+            color="whiteAlpha.800"
+            textShadow="0 4px 30px rgba(0,0,0,0.15)"
+            // bgClip="text"
             fontWeight="extrabold"
             lineHeight="1.2"
           >
             Gym NFT Marketplace
           </Heading>
-
           <Text
             as={motion.p}
             variants={itemVariants}
@@ -111,50 +103,54 @@ const Home: NextPage = () => {
             color="whiteAlpha.800"
             maxW="600px"
           >
-            Buy, sell, or trade your gym memberships as NFTs in our decentralized marketplace.
+            Buy, sell, or trade your gym memberships as NFTs in our marketplace.
           </Text>
-
-          <Flex 
+          <Flex
             direction={{ base: 'column', md: 'row' }}
             gap={4}
             as={motion.div}
             variants={itemVariants}
           >
             <MotionLinkButton
+              href="/gym/sell"
+              size="lg"
+              variant="solid"
+              bg="whiteAlpha.300"
+              color="white"
+              border="1px solid"
+              borderColor="whiteAlpha.700"
+              backdropFilter="blur(10px)"
+              _hover={{
+                bg: 'whiteAlpha.500',
+                borderColor: 'whiteAlpha.900',
+                boxShadow: '0 0 10px rgba(255, 255, 255, 0.3)'
+              }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Sell Membership
+            </MotionLinkButton>
+
+
+
+            <MotionLinkButton
               href="/gym/buy"
               size="lg"
-              colorScheme="whiteAlpha"
               variant="outline"
-              _hover={{ bg: 'whiteAlpha.200' }}
+              color="white"
+              borderColor="whiteAlpha.700"
+              _hover={{
+                bg: 'whiteAlpha.200',
+                borderColor: 'whiteAlpha.900',
+                color: 'white'
+              }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               Buy Membership
             </MotionLinkButton>
 
-            <MotionLinkButton
-              href="/gym/sell"
-              size="lg"
-              bgGradient="linear(to-r, #ec4899, #8b5cf6)"
-              _hover={{ bgGradient: 'linear(to-r, #db2777, #7c3aed)' }}
-              color="white"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Sell Membership
-            </MotionLinkButton>
           </Flex>
-
-          <Box
-            as={motion.div}
-            variants={itemVariants}
-            mt={8}
-          >
-            <ConnectWallet 
-              theme="dark"
-              btnTitle="Connect Wallet"
-            />
-          </Box>
         </VStack>
       </Container>
     </Box>

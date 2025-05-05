@@ -1,10 +1,12 @@
-import { Avatar, Box, Container, Flex, Input, SimpleGrid, Skeleton, Stack, Text } from "@chakra-ui/react";
-import { MediaRenderer, ThirdwebNftMedia, Web3Button, useContract, useMinimumNextBid, useValidDirectListings, useValidEnglishAuctions } from "@thirdweb-dev/react";
+import { Avatar, Box, Container, Flex, Input, SimpleGrid, Skeleton, Stack, Text, Button, Tooltip, IconButton } from "@chakra-ui/react";
+import { MediaRenderer, ThirdwebNftMedia, Web3Button, useAddress, useContract, useMinimumNextBid, useValidDirectListings, useValidEnglishAuctions } from "@thirdweb-dev/react";
 import { NFT, ThirdwebSDK } from "@thirdweb-dev/sdk";
 import React, { useState } from "react";
 import { FOOD_NFT_COLLECTION_ADDRESS, MARKETPLACE_ADDRESS } from "../../../../const/addresses";
 import { GetStaticPaths, GetStaticProps } from "next";
 import Link from "next/link";
+import { useRouter } from 'next/router';
+import { FaStar, FaRegStar } from "react-icons/fa";
 
 type Props = {
     nft: NFT;
@@ -13,69 +15,104 @@ type Props = {
 
 export default function TokenPage({ nft, contractMetadata }: Props) {
     const { contract: marketplace, isLoading: loadingMarketplace } =
-        useContract(
-            MARKETPLACE_ADDRESS,
-            "marketplace-v3"
-        );
-
-    const { contract: nftCollection } = useContract(FOOD_NFT_COLLECTION_ADDRESS);
+            useContract(
+                MARKETPLACE_ADDRESS,
+                "marketplace-v3"
+            );
     
-    const { data: directListing, isLoading: loadingDirectListing } =
-        useValidDirectListings(marketplace, {
-            tokenContract: FOOD_NFT_COLLECTION_ADDRESS,
-            tokenId: nft.metadata.id,
-        });
-
-    const [bidValue, setBidValue] = useState<string>();
-
-    const { data: auctionListing, isLoading: loadingAuction } =
-        useValidEnglishAuctions(marketplace, {
-            tokenContract: FOOD_NFT_COLLECTION_ADDRESS,
-            tokenId: nft.metadata.id,
-        });
-
-
-    async function buyListing() {
-        let txResult;
-
-        if (auctionListing?.[0]) {
-            txResult = await marketplace?.englishAuctions.buyoutAuction(
-                auctionListing[0].id,
-            );
-        } else if (directListing?.[0]) {
-            txResult = await marketplace?.directListings.buyFromListing(
-                directListing[0].id,
-                1
-            );
-        } else {
-            throw new Error("No listing found");
-        }
-
-        return txResult;
-    }
-
-    async function createBidOffer() {
-        let txResult;
-        if(!bidValue) {
-            return;
-        }
-
-        if (auctionListing?.[0]) {
-            txResult = await marketplace?.englishAuctions.makeBid(
-                auctionListing[0].id,
-                bidValue
-            );
-        } else if (directListing?.[0]){
-            txResult = await marketplace?.offers.makeOffer({
-                assetContractAddress: FOOD_NFT_COLLECTION_ADDRESS,
+        const { contract: nftCollection } = useContract(FOOD_NFT_COLLECTION_ADDRESS);
+        const router = useRouter();
+        const address = useAddress();
+        const [isFavorite, setIsFavorite] = React.useState(false);
+        
+        React.useEffect(() => {
+            if (address) {
+                const favorites = JSON.parse(localStorage.getItem(`favorites_${address}`) || '{}');
+                const compositeKey = `${FOOD_NFT_COLLECTION_ADDRESS}_${nft.metadata.id}`;
+                setIsFavorite(!!favorites[compositeKey]);
+            }
+        }, [address, nft.metadata.id]);
+    
+        // In your TokenPage component, update the toggleFavorite function:
+        const toggleFavorite = () => {
+            if (!address) return;
+        
+            const favorites = JSON.parse(localStorage.getItem(`favorites_${address}`) || '{}');
+            const newFavorites = { ...favorites };
+            const compositeKey = `${FOOD_NFT_COLLECTION_ADDRESS}_${nft.metadata.id}`;
+    
+            if (isFavorite) {
+                delete newFavorites[compositeKey];
+            } else {
+                newFavorites[compositeKey] = {
+                    id: nft.metadata.id,
+                    name: nft.metadata.name,
+                    image: nft.metadata.image,
+                    contractAddress: FOOD_NFT_COLLECTION_ADDRESS
+                };
+            }
+    
+            localStorage.setItem(`favorites_${address}`, JSON.stringify(newFavorites));
+            window.dispatchEvent(new Event('storage'));
+            setIsFavorite(!isFavorite);
+    
+        };
+            const { data: directListing, isLoading: loadingDirectListing } =
+                useValidDirectListings(marketplace, {
+                tokenContract: FOOD_NFT_COLLECTION_ADDRESS,
                 tokenId: nft.metadata.id,
-                totalPrice: bidValue,
-            })
-        } else {
-            throw new Error("No listing found");
+            });
+    
+        const [bidValue, setBidValue] = useState<string>();
+    
+        const { data: auctionListing, isLoading: loadingAuction } =
+            useValidEnglishAuctions(marketplace, {
+                tokenContract: FOOD_NFT_COLLECTION_ADDRESS,
+                tokenId: nft.metadata.id,
+            });
+    
+    
+        async function buyListing() {
+            let txResult;
+    
+            if (auctionListing?.[0]) {
+                txResult = await marketplace?.englishAuctions.buyoutAuction(
+                    auctionListing[0].id,
+                );
+            } else if (directListing?.[0]) {
+                txResult = await marketplace?.directListings.buyFromListing(
+                    directListing[0].id,
+                    1
+                );
+            } else {
+                throw new Error("No listing found");
+            }
+    
+            return txResult;
         }
-        return txResult;
-    }
+    
+        async function createBidOffer() {
+            let txResult;
+            if(!bidValue) {
+                return;
+            }
+    
+            if (auctionListing?.[0]) {
+                txResult = await marketplace?.englishAuctions.makeBid(
+                    auctionListing[0].id,
+                    bidValue
+                );
+            } else if (directListing?.[0]){
+                txResult = await marketplace?.offers.makeOffer({
+                    assetContractAddress: FOOD_NFT_COLLECTION_ADDRESS,
+                    tokenId: nft.metadata.id,
+                    totalPrice: bidValue,
+                })
+            } else {
+                throw new Error("No listing found");
+            }
+            return txResult;
+        }
     
     return (
         <Container maxW={"1200px"} p={5} my={5}>
@@ -95,7 +132,6 @@ export default function TokenPage({ nft, contractMetadata }: Props) {
                         <Text>{nft.metadata.description}</Text>
                     </Box>
                     <Box paddingBottom={"70px"}>
-                        <Text fontWeight={"bold"}>Traits:</Text>
                         <SimpleGrid columns={2} spacing={4}>
                             {Object.entries(nft?.metadata.attributes || {}).map(
                                 ([key, value]) => {
@@ -120,7 +156,23 @@ export default function TokenPage({ nft, contractMetadata }: Props) {
                         </SimpleGrid>
                     </Box>
                 </Stack>
+                
                 <Stack spacing={"20px"}>
+                <Box display="flex" alignItems="center" gap={2} mb={4}>
+    <Button onClick={() => router.back()} colorScheme="gray" size="sm">
+        ← Back
+    </Button>
+    <Tooltip label={isFavorite ? "Remove from favorites" : "Add to favorites"}>
+        <IconButton
+            aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+            icon={isFavorite ? <FaStar color="gold" /> : <FaRegStar />}
+            onClick={toggleFavorite}
+            size="sm"
+            variant="outline"
+        />
+    </Tooltip>
+</Box>
+                              
                     {contractMetadata && (
                         <Flex alignItems={"center"}>
                             <Box borderRadius={"4px"} overflow={"hidden"} mr={"10px"}>
@@ -208,54 +260,58 @@ export default function TokenPage({ nft, contractMetadata }: Props) {
 
 export const getStaticProps: GetStaticProps = async (context) => {
     const tokenId = context.params?.tokenId as string;
-    const sdk = new ThirdwebSDK("sepolia");
-  
-    let nft = null;
-    let contractMetadata = null;
+    
+    // Initialize SDK with proper error handling
+    let sdk;
+    try {
+      sdk = new ThirdwebSDK("sepolia");
+    } catch (e) {
+      console.error("SDK initialization failed:", e);
+      return { notFound: true };
+    }
   
     try {
       const contract = await sdk.getContract(FOOD_NFT_COLLECTION_ADDRESS);
-      nft = await contract.erc721.get(tokenId);
-      
-      // Handle undefined values
-      contractMetadata = await contract.metadata.get();
-      contractMetadata = {
-        ...contractMetadata,
-        description: contractMetadata.description ?? "No description available",
-        image: contractMetadata.image ?? null,
-        name: contractMetadata.name ?? "Unnamed Collection",
+      const [nft, metadata] = await Promise.all([
+        contract.erc721.get(tokenId),
+        contract.metadata.get().catch(() => null), // Graceful fallback
+      ]);
+  
+      if (!nft) return { notFound: true };
+  
+      return {
+        props: {
+          nft,
+          contractMetadata: {
+            description: metadata?.description || "No description available",
+            image: metadata?.image || null,
+            name: metadata?.name || "Unnamed Collection",
+          },
+        },
+        revalidate: 60, // Consider increasing revalidate time
       };
     } catch (e) {
-      console.error("Error fetching NFT or metadata:", e);
+      console.error("Error fetching NFT data:", e);
+      return { notFound: true };
     }
-  
-    return {
-      props: {
-        nft,
-        contractMetadata,
-      },
-      revalidate: 1,
-    };
   };
 
   export const getStaticPaths: GetStaticPaths = async () => {
     const sdk = new ThirdwebSDK("sepolia");
-  
     const contract = await sdk.getContract(FOOD_NFT_COLLECTION_ADDRESS);
-  
-    const nfts = await contract.erc721.getAll();
-  
-    const paths = nfts.map((nft) => {
-      return {
-        params: {
-          contractAddress: FOOD_NFT_COLLECTION_ADDRESS,
-          tokenId: nft.metadata.id,
-        },
-      };
-    });
+    
+    // Only fetch the first 50 NFTs for static generation
+    const nfts = await contract.erc721.getAll({ count: 50 });
+    
+    const paths = nfts.map((nft) => ({
+      params: {
+        contractAddress: FOOD_NFT_COLLECTION_ADDRESS,
+        tokenId: nft.metadata.id.toString(),
+      },
+    }));
   
     return {
       paths,
-      fallback: "blocking", // can also be true or 'blocking'
+      fallback: 'blocking', // Keep this for new NFTs
     };
   };

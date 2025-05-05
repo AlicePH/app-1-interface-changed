@@ -2,6 +2,7 @@ import type { NFT as NFTType } from "@thirdweb-dev/sdk";
 import { SimpleGrid, Skeleton, Text, Link } from "@chakra-ui/react";
 import NFT from "../NFTs/food_NFT"
 import { FOOD_NFT_COLLECTION_ADDRESS } from "../../const/addresses";
+import { useAddress } from "@thirdweb-dev/react";
 
 type Props = {
     isLoading: boolean;
@@ -11,12 +12,16 @@ type Props = {
     onFavoriteChange?: () => void;
 }
 
-export default function NFTGrid({
+export default function FoodNFTGrid({
     isLoading,
     data,
     overrideOnclickBehavior,
     emptyText = "No NFTs found",
 }: Props) {
+    const address = useAddress();
+    if (!address) {
+                return <Text>Connect your wallet to view favorites</Text>;
+            }
     return (
         <SimpleGrid columns={4} spacing={6} w={"100%"} padding={2.5} my={5}>
             {isLoading ? (
@@ -30,18 +35,14 @@ export default function NFTGrid({
                             href={`/food_delivery/token_food/${FOOD_NFT_COLLECTION_ADDRESS}/${nft.metadata.id}`}
                             key={nft.metadata.id}
                         >
-                            <NFT nft={nft} contractAddress={""} onClick={function (): void {
-                                throw new Error("Function not implemented.");
-                            } } />
+                            <NFT nft={nft} contractAddress={""} />
                         </Link>
                     ) : (
                         <div
                             key={nft.metadata.id}
                             onClick={() => overrideOnclickBehavior(nft)}
                         >
-                            <NFT nft={nft} contractAddress={""} onClick={function (): void {
-                                    throw new Error("Function not implemented.");
-                                } } />
+                            <NFT nft={nft} contractAddress={""}  />
                         </div>
                     )
                 )

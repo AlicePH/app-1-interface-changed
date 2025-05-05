@@ -1,23 +1,39 @@
-import { Box, Button, Card, Container, Flex, Heading, SimpleGrid, Stack, Text } from "@chakra-ui/react";
+import { Box, Button, Card, Container, Flex, Heading, SimpleGrid, Stack, Text, Alert, AlertIcon } from "@chakra-ui/react";
 import { ThirdwebNftMedia, useAddress, useContract, useOwnedNFTs } from "@thirdweb-dev/react";
 import React, { useState } from "react";
 import { FOOD_NFT_COLLECTION_ADDRESS } from "../../const/addresses";
 import type { NFT as NFTType } from "@thirdweb-dev/sdk";
-import NFTGrid from "../../components_new/NFTGrids/food_NFTGrid";
+import FoodNFTGrid from "../../components_new/NFTGrids/food_NFTGrid";
 import SaleInfo from "../../components_new/SaleInfos/food_SaleInfo";
+import Link from "next/link";
 
 export default function Sell() {
     const { contract } = useContract(FOOD_NFT_COLLECTION_ADDRESS);
     const address = useAddress();
     const { data, isLoading } = useOwnedNFTs(contract, address);
+
     const [selectedNFT, setSelectedNFT] = useState<NFTType>();
+
+    if (!address) {
+        return (
+            <Container maxW={"1200px"} p={5}>
+                <Heading marginBottom={"1rem"}>Sell NFTs</Heading>
+                <Alert status="warning" borderRadius="md" mb={5}>
+                    <AlertIcon />
+                    You have to login or sign up to sell NFTs
+                </Alert>
+                <Text>Connect your wallet to view and sell your NFTs.</Text>
+                
+            </Container>
+        );
+    }
 
     return (
         <Container maxW={"1200px"} p={5}>
             <Heading>Sell NFTs</Heading>
             <Text>Select which NFT to sell below.</Text>
             {!selectedNFT ? (
-                <NFTGrid
+                <FoodNFTGrid
                     data={data}
                     isLoading={isLoading}
                     overrideOnclickBehavior={(nft) => {
